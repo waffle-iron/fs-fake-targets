@@ -26,7 +26,7 @@ module Nuget =
 
 module Release =
   let Items = !! "**/bin/Release/*"
-  let Nuspec = "FsharpFakeTargets.nuspec"
+  let Nuspec = "FSharpFakeTargets.nuspec"
 
   let Version = "0.1.0-alpha"
   let Project = "FSharp.FakeTargets"
