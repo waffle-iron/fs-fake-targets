@@ -11,12 +11,16 @@ module Targets =
     {
       SolutionFile : FileIncludes
       MSBuildArtifacts : FileIncludes
+      MSBuildReleaseArtifacts : FileIncludes
+      MSBuildOutputDir : string
     }
 
   let ConfigDefaults() =
     {
       SolutionFile = !! (Path.Combine(RootDir, "*.sln"))
-      MSBuildArtifacts = !! "**/bin/**.*" ++ "**/obj/**.*"
+      MSBuildArtifacts = !! "src/**/bin/**/*.*" ++ "src/**/obj/**/*.*"
+      MSBuildReleaseArtifacts = !! "**/bin/Release/*"
+      MSBuildOutputDir = "bin"
     }
 
   let private _CreateTarget targetName parameters targetFunc =
@@ -28,11 +32,14 @@ module Targets =
         parameters.SolutionFile
             |> MSBuildRelease null "Build"
             |> ignore
+
+        Copy parameters.MSBuildOutputDir parameters.MSBuildReleaseArtifacts
     )
 
   let private _CleanTarget parameters =
     _CreateTarget "Clean" parameters (fun _ ->
-         CleanDirs parameters.MSBuildArtifacts
+        DeleteFiles parameters.MSBuildArtifacts
+        CleanDir parameters.MSBuildOutputDir
     )
 
   let Initialize setParams =
