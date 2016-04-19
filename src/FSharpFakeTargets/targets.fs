@@ -1,4 +1,4 @@
-﻿namespace DatNET
+﻿namespace datNET
 
 module Targets =
   open Fake
