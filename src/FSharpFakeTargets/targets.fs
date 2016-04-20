@@ -4,6 +4,7 @@ module Targets =
   open Fake
   open Fake.FileSystem
   open System.IO
+  open System
   open Fake.FileSystemHelper
   open Fake.NuGetHelper
 
@@ -15,7 +16,7 @@ module Targets =
       MSBuildArtifacts : FileIncludes
       MSBuildReleaseArtifacts : FileIncludes
       MSBuildOutputDir : string
-      NuspecFilePath : string
+      NuspecFilePath : Option<string>
       NuGetParams : NuGetParams
     }
 
@@ -25,9 +26,14 @@ module Targets =
       MSBuildArtifacts = !! "src/**/bin/**/*.*" ++ "src/**/obj/**/*.*"
       MSBuildReleaseArtifacts = !! "**/bin/Release/*"
       MSBuildOutputDir = "bin"
-      NuspecFilePath = FindFirstMatchingFile "*.nuspec" "."
+      NuspecFilePath = TryFindFirstMatchingFile "*.nuspec" "."
       NuGetParams = NuGetDefaults()
     }
+
+  let private _EnsureNuspecFileExists filePath =
+    match filePath with
+    | Some x -> x
+    | None -> raise (FileNotFoundException("Could not find the nuspec file"))
 
   let private _CreateTarget targetName parameters targetFunc =
     Target targetName targetFunc
@@ -51,6 +57,7 @@ module Targets =
   let private _PackageTarget parameters =
     _CreateTarget "Package" parameters (fun _ ->
         parameters.NuspecFilePath
+            |> _EnsureNuspecFileExists
             |> NuGetPack (fun nugetParams -> parameters.NuGetParams)
     )
 
