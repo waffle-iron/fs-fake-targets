@@ -4,6 +4,8 @@ module Targets =
   open Fake
   open Fake.FileSystem
   open System.IO
+  open Fake.FileSystemHelper
+  open Fake.NuGetHelper
 
   let private RootDir = Directory.GetCurrentDirectory()
 
@@ -13,6 +15,8 @@ module Targets =
       MSBuildArtifacts : FileIncludes
       MSBuildReleaseArtifacts : FileIncludes
       MSBuildOutputDir : string
+      NuspecFilePath : string
+      NuGetParams : NuGetParams
     }
 
   let ConfigDefaults() =
@@ -21,6 +25,8 @@ module Targets =
       MSBuildArtifacts = !! "src/**/bin/**/*.*" ++ "src/**/obj/**/*.*"
       MSBuildReleaseArtifacts = !! "**/bin/Release/*"
       MSBuildOutputDir = "bin"
+      NuspecFilePath = FindFirstMatchingFile "*.nuspec" "."
+      NuGetParams = NuGetDefaults()
     }
 
   let private _CreateTarget targetName parameters targetFunc =
@@ -42,9 +48,16 @@ module Targets =
         CleanDir parameters.MSBuildOutputDir
     )
 
+  let private _PackageTarget parameters =
+    _CreateTarget "Package" parameters (fun _ ->
+        parameters.NuspecFilePath
+            |> NuGetPack (fun nugetParams -> parameters.NuGetParams)
+    )
+
   let Initialize setParams =
     let parameters = ConfigDefaults() |> setParams
 
     parameters
         |> _MSBuildTarget
         |> _CleanTarget
+        |> _PackageTarget
